@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t ignj/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true ignj/react-test npm test
+
+after_success:
+  - docker build -t ignj/multi-client ./client
+  - docker build -t ignj/multi-nginx ./nginx
+  - docker build -t ignj/multi-server ./server
+  - docker build -t ignj/multi-worker ./worker
+  # log into docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push images to dockerhub
+  - docker push ignj/multi-client
+  - docker push ignj/multi-nginx
+  - docker push ignj/multi-server
+  - docker push ignj/multi-worker
